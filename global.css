@@ -9,4 +9,22 @@ body {
     padding: 1em;
   }
 
-  
+.header {
+    display: flex;
+    align-items: baseline;
+    gap: 1em;
+}
+
+.label {
+  margin-left: auto;
+}
+.time #time-display {
+  display: block;
+}
+
+em#any-time {
+  display: block;
+  font-style: italic;
+  color: var(--color-gray);
+  font-size: 0.8em;
+}

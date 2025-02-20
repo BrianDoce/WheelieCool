@@ -11,8 +11,18 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
 </head>
 <body>
-    <h1>😎 Bike Watching</h1>
-    <h2>This is an interactive visualization of bike traffic in Boston, Massachussetts during different times.</h2>
+    <header>
+        <h1>😎 Bike Watching</h1>
+        <h2>This is an interactive visualization of bike traffic in Boston, Massachussetts during different times.</h2>
+        <div class="time-filter">
+            <label for="time-slider">
+            Filter by time:
+            <input type="range" id="time-slider" min="-1" max="1440" value="-1">
+            <time id="time-display" class="time-display">11:59 PM</time>
+            </label>
+            <em id="any-time" class="any-time">(any time)</em>
+        </div>
+    </header>
     <div id="map">
         <svg></svg>
     </div>
