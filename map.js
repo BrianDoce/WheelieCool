@@ -199,24 +199,24 @@ map.on('load', () => {
         // console.log(`Filtering trips for time: ${timeFilter}`);
         // console.log(`Total trips before filtering: ${trips.length}`);
 
-        filteredTrips = timeFilter === -1
-            ? trips
-            : trips.filter((trips) => {
-                const startedMinutes = minutesSinceMidnight(trips.started_at);
-                const endedMinutes = minutesSinceMidnight(trips.ended_at);
-                return (
-                  Math.abs(startedMinutes - timeFilter) <= 60 ||
-                  Math.abs(endedMinutes - timeFilter) <= 60
-                );
-              });   
+        // filteredTrips = timeFilter === -1
+        //     ? trips
+        //     : trips.filter((trips) => {
+        //         const startedMinutes = minutesSinceMidnight(trips.started_at);
+        //         const endedMinutes = minutesSinceMidnight(trips.ended_at);
+        //         return (
+        //           Math.abs(startedMinutes - timeFilter) <= 60 ||
+        //           Math.abs(endedMinutes - timeFilter) <= 60
+        //         );
+        //       });   
         filteredDepartures = d3.rollup(
-            filteredTrips,
+            filterByMinute(departuresByMinute, timeFilter),
             v => v.length,
             d => d.start_station_id
         );
     
         filteredArrivals = d3.rollup(
-            filteredTrips,
+            filterByMinute(arrivalsByMinute, timeFilter),
             v => v.length,
             d => d.end_station_id
         );
@@ -262,3 +262,18 @@ map.on('load', () => {
 
 
 });
+
+function filterByMinute(tripsByMinute, minute) {
+    // Normalize both to the [0, 1439] range
+    // % is the remainder operator: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder
+    let minMinute = (minute - 60 + 1440) % 1440;
+    let maxMinute = (minute + 60) % 1440;
+  
+    if (minMinute > maxMinute) {
+      let beforeMidnight = tripsByMinute.slice(minMinute);
+      let afterMidnight = tripsByMinute.slice(0, maxMinute);
+      return beforeMidnight.concat(afterMidnight).flat();
+    } else {
+      return tripsByMinute.slice(minMinute, maxMinute).flat();
+    }
+  }
