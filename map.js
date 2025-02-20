@@ -10,6 +10,9 @@ let filteredDepartures = new Map();
 let filteredStations = [];
 let departuresByMinute = Array.from({ length: 1440 }, () => []);
 let arrivalsByMinute = Array.from({ length: 1440 }, () => []);
+const colorDepartures = 'steelblue';
+const colorArrivals = 'darkorange';
+
 
 // Initialize the map
 const map = new mapboxgl.Map({
@@ -151,8 +154,8 @@ map.on('load', () => {
                 d3.select(this)
                 .append('title')
                 .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
-            });  
-            
+            });
+
             timeSlider.addEventListener('input', () => {
                 updateTimeDisplay();
                 filterTripsbyTime();
@@ -229,16 +232,16 @@ map.on('load', () => {
             
             return station;
         });
-        console.log("arrivals", filteredArrivals);
-        console.log("fdep:", filteredDepartures);
-        console.log("f stations:", filteredStations);
+        // console.log("arrivals", filteredArrivals);
+        // console.log("fdep:", filteredDepartures);
+        // console.log("f stations:", filteredStations);
 
-        console.log("Traffic data check:", stations.map(s => ({
-            id: s.short_name,
-            arrivals: s.arrivals,
-            departures: s.departures,
-            total: s.totalTraffic
-          })));
+        // console.log("Traffic data check:", stations.map(s => ({
+        //     id: s.short_name,
+        //     arrivals: s.arrivals,
+        //     departures: s.departures,
+        //     total: s.totalTraffic
+        //   })));
           
           // Make sure your max is calculated correctly
           const maxTraffic = d3.max(filteredStations, d => d.totalTraffic);
@@ -247,6 +250,8 @@ map.on('load', () => {
         const scaleRange = timeFilter === -1 ? [0, 25] : [3, 50];
         radiusScale.range(scaleRange);
         
+        let stationFlow = d3.scaleQuantize().domain([0, 1]).range([0, 0.5, 1]);
+
         svg.selectAll('circle')
         .data(filteredStations)
         .attr('r', d => radiusScale(d.totalTraffic))
@@ -255,11 +260,12 @@ map.on('load', () => {
             circle.select('title').remove();
             circle.append('title')
                 .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
-        });
+        })
+        .style("--departure-ratio", d => stationFlow(d.departures / d.totalTraffic));
+
         // const testDate = new Date("2024-03-01T08:30:00");
         // console.log(`Test date ${testDate} gives minutes: ${minutesSinceMidnight(testDate)}`);
     }
-
 
 });
 
@@ -277,3 +283,20 @@ function filterByMinute(tripsByMinute, minute) {
       return tripsByMinute.slice(minMinute, maxMinute).flat();
     }
   }
+  function mixColors(color1, color2, ratio) {
+    const hex = (color) => {
+        const [r, g, b] = color.match(/\w\w/g).map((c) => parseInt(c, 16));
+        return { r, g, b };
+    };
+
+    const color1Rgb = hex(color1);
+    const color2Rgb = hex(color2);
+
+    const mix = (c1, c2, ratio) => Math.round(c1 * (1 - ratio) + c2 * ratio);
+
+    const r = mix(color1Rgb.r, color2Rgb.r, ratio);
+    const g = mix(color1Rgb.g, color2Rgb.g, ratio);
+    const b = mix(color1Rgb.b, color2Rgb.b, ratio);
+
+    return `rgb(${r}, ${g}, ${b})`;
+}
