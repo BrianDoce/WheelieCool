@@ -148,12 +148,17 @@ map.on('load', () => {
       
           circles
             .data(stations)
+            .join('circle')
             .attr('r', d => radiusScale(d.totalTraffic))
             .each(function(d) {
+                let circle = d3.select(this);
+                circle.select('title').remove(); // Remove old title
+                circle.append('title')
+                    .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
                 // Add <title> for browser tooltips
-                d3.select(this)
-                .append('title')
-                .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+                // d3.select(this)
+                // .append('title')
+                // .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
             });
 
             timeSlider.addEventListener('input', () => {
@@ -194,10 +199,10 @@ map.on('load', () => {
     }
 
     function filterTripsbyTime() {
-        if (!trips || !trips.length) {
-            console.log("Trips data not yet loaded");
-            return;
-        }
+        // if (!trips || !trips.length) {
+        //     console.log("Trips data not yet loaded");
+        //     return;
+        // }
     
         // console.log(`Filtering trips for time: ${timeFilter}`);
         // console.log(`Total trips before filtering: ${trips.length}`);
@@ -212,6 +217,8 @@ map.on('load', () => {
         //           Math.abs(endedMinutes - timeFilter) <= 60
         //         );
         //       });   
+        filteredDepartures.clear();
+        filteredArrivals.clear();
         filteredDepartures = d3.rollup(
             filterByMinute(departuresByMinute, timeFilter),
             v => v.length,
@@ -252,16 +259,75 @@ map.on('load', () => {
         
         let stationFlow = d3.scaleQuantize().domain([0, 1]).range([0, 0.5, 1]);
 
-        svg.selectAll('circle')
+        const circles = svg.selectAll('circle')
+        .data(filteredStations, d => d.short_name);  // Use key function for tracking elements
+
+        circles.exit().remove();  // Remove circles that are not in filteredStations
+
+        // circles.enter()
+        // .append('circle')
+        // .merge(circles)  // Merge new and existing circles
+        // .attr('r', d => d.totalTraffic > 0 ? radiusScale(d.totalTraffic) : 0) // Hide if no traffic
+        // .attr('cx', d => getCoords(d).cx)
+        // .attr('cy', d => getCoords(d).cy)
+        // .style('display', d => d.totalTraffic > 0 ? null : 'none') // Hide circles with no traffic
+        // .attr('fill', d => {
+        //     const departureRatio = d.departures / (d.departures + d.arrivals || 1);
+        //     return d3.interpolateRgb("steelblue", "darkorange")(departureRatio);
+        // })
+        // .each(function(d) {
+        //     d3.select(this).select('title').remove();
+        //     d3.select(this).append('title')
+        //         .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`)
+        // })
+        // .style("--departure-ratio", d => stationFlow(d.departures / d.totalTraffic));
+
+        // circles.enter()
+        // .append('circle')
+        // .merge(circles)
+        // .style('display', d => d.totalTraffic > 0 ? null : 'none') // Hide circles with no traffic
+        // .each(function(d) {
+        //     // const circle = d3.select(this);
+        //     // circle.select('title').remove();
+        //     // circle.append('title')
+        //     //     .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+        //     d3.select(this).select('title').remove(); // Remove old title
+        //     d3.select(this)
+        //         .append('title')
+        //         .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+        // })
+        // .style("--departure-ratio", d => stationFlow(d.departures / d.totalTraffic));
+
+         svg.selectAll('circle')
         .data(filteredStations)
+        .style('display', d => d.totalTraffic > 0 ? null : 'none') // Hide circles with no traffic
         .attr('r', d => radiusScale(d.totalTraffic))
         .each(function(d) {
-            const circle = d3.select(this);
-            circle.select('title').remove();
-            circle.append('title')
+            // const circle = d3.select(this);
+            // circle.select('title').remove();
+            // circle.append('title')
+            //     .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+            d3.select(this).select('title').remove(); // Remove old title
+            d3.select(this)
+                .append('title')
                 .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
         })
         .style("--departure-ratio", d => stationFlow(d.departures / d.totalTraffic));
+
+        // svg.selectAll('circle')
+        // .data(filteredStations)
+        // .attr('r', d => radiusScale(d.totalTraffic))
+        // .each(function(d) {
+        //     // const circle = d3.select(this);
+        //     // circle.select('title').remove();
+        //     // circle.append('title')
+        //     //     .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+        //     d3.select(this).select('title').remove(); // Remove old title
+        //     d3.select(this)
+        //         .append('title')
+        //         .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+        // })
+        // .style("--departure-ratio", d => stationFlow(d.departures / d.totalTraffic));
 
         // const testDate = new Date("2024-03-01T08:30:00");
         // console.log(`Test date ${testDate} gives minutes: ${minutesSinceMidnight(testDate)}`);

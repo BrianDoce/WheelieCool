@@ -35,5 +35,6 @@ circle{
     var(--color-departures) calc(100% * var(--departure-ratio)),
     var(--color-arrivals)
     );
+   
     fill: var(--color);
 }
